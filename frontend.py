@@ -10,8 +10,19 @@ def main():
     while (frontEnd.closed == False):
         fromUser = frontEnd.input()
 
+        #injection to retrieve all tables
+        # ' UNION SELECT name, type FROM sqlite_schema WHERE type = "table" AND name NOT LIKE "sqlite_%"; --
+
+        #Unsafe search function
         toUser = serv.search(fromUser)
 
+        #Safe function checking for non-AlphaNumeric charicters (uncomment to use)
+        #toUser = serv.alphNumb(fromUser)
+
+        #Safe function to force input as string Must be exact match
+        #toUser = serv.parameterized(fromUser) 
+        
+        #returns to user
         frontEnd.display(toUser)
 
 
@@ -69,8 +80,7 @@ class SQL:
         self.cur = self.con.cursor()
         self.ex = self.cur.execute
         self.git = self.cur.fetchall
-        #self.ex('SELECT name, type FROM sqlite_schema WHERE type = "table" AND name NOT LIKE "sqlite_%";')
-        #self.names =self.cur.fetchall()
+        
         
     #unsafe and vulnerable method, inputs user values into Query 
     def search(self, searchParam):
@@ -82,16 +92,21 @@ class SQL:
     #class method to check if the input is proper alphanumeric
     def alphNumb(self, check ):
         
-        if ( check.isAlnum() == True ):
+        if ( check[1].isalnum() == True ):
             return (check)
         else:
             return ("invalid input")
 
 
-    #search param as string and only string 
+    #search param as string and only string, Must be exact match
     def parameterized (self, searchParam):   
-        qryStrng ="SELECT ? FROM  WHERE name=%?%"
-        self.ex(qryStrng, (searchParam[0],searchParam[1]))
+        qryStrng ="SELECT * FROM "+searchParam[0] + " WHERE name=? "
+        a_name = searchParam[1]
+        
+        
+        self.ex(qryStrng, [a_name] )
+        data =self.git()
+        return data
 
 
 
