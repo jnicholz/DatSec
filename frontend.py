@@ -1,5 +1,5 @@
 import sqlite3
-from sqlite3.dbapi2 import Cursor
+from sqlite3.dbapi2 import Cursor, Error
 import PySimpleGUI as sg
 
 def main():
@@ -23,7 +23,7 @@ class gui:
 
     def __init__(self) :
         
-        self.theme = sg.theme('DarkAmber')   # Add a touch of color
+        self.theme = sg.theme('DarkAmber')  
         self.userFeedback = ''
         self.dropdown = ''
         self.text = ''
@@ -31,17 +31,18 @@ class gui:
         self.closed = False
     
 
-        self.layout =  [  [sg.Text('Catagory of search'), sg.Combo([ 'artists','genres', 'playlists', 'tracks'])], 
-            [sg.Text('search'), sg.InputText()],
-            [sg.Button('Ok'), sg.Button('Cancel')],
-            [self.usrMsgBox]]
+        self.layout =  [  [sg.Text('Category of search'), sg.Combo(values=[ 'artists','genres', 'playlists', 'tracks'])], 
+            [sg.Text('Search'), sg.InputText()],
+             [self.usrMsgBox],
+            [sg.Button('Ok'), sg.Button('Cancel')]
+           ]
 
         # Create the Window
-        self.window = sg.Window('User database input', self.layout)
+        self.window = sg.Window('User database input', self.layout, size=(600,200))
     
         self.window.Finalize()
 
-            # Event Loop to process "events" and get the "values" of the inputs
+           
     def input(self):
         while True:
             event, values = self.window.read()
@@ -68,31 +69,32 @@ class SQL:
         self.cur = self.con.cursor()
         self.ex = self.cur.execute
         self.git = self.cur.fetchall
-        #self.ex('SELECT name FROM sqlite_schema WHERE type = "table" AND name NOT LIKE "sqlite_%";')
+        #self.ex('SELECT name, type FROM sqlite_schema WHERE type = "table" AND name NOT LIKE "sqlite_%";')
         #self.names =self.cur.fetchall()
         
-
+    #unsafe and vulnerable method, inputs user values into Query 
     def search(self, searchParam):
         self.ex(("SELECT * FROM "+searchParam[0]+" WHERE Name LIKE '%"+searchParam[1]+"%'" ))
         data = self.git()
         return data
 
+
+    #class method to check if the input is proper alphanumeric
+    def alphNumb(self, check ):
         
+        if ( check.isAlnum() == True ):
+            return (check)
+        else:
+            return ("invalid input")
+
+
+    #search param as string and only string 
+    def parameterized (self, searchParam):   
+        qryStrng ="SELECT ? FROM  WHERE name=%?%"
+        self.ex(qryStrng, (searchParam[0],searchParam[1]))
+
+
 
 
 main()
-
-
-
-'''
-conn = pyodbc.connect('Driver={C:\sqlite\Database\ToworkWith};'
-                      'Server=server_name;'
-                      'Database=database_name;'
-                      'Trusted_Connection=yes;')
-
-cursor = conn.cursor()
-cursor.execute('SELECT * FROM table_name')
-
-for i in cursor:
-    print(i) '''
 
